@@ -1,0 +1,13 @@
+name: CentralCoastEscapement
+title:
+username:
+account: salmonwatersheds
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4363188
+bundleId: 5286781
+url: https://salmonwatersheds.shinyapps.io/CentralCoastEscapement/
+when: 1637710003.16929
+lastSyncTime: 1637710003.1693
+asMultiple: FALSE
+asStatic: FALSE
