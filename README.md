@@ -1,2 +1,2 @@
 # TransboundaryTool
-Exploring the use of a Shiny App to explore data in the Transboundary region
+Exploring the use of a Shiny App to visualize escapement data in the Transboundary region
