@@ -54,6 +54,7 @@ catCol <- c(abundCol[c(1,4,7,10)])
 # spawning location lines (sp object) and points (eventData)
 
 tbrPoly <- read.csv("data/tbrPolygon.csv")
+
 coastline <- importShapefile("data/coastline/250_CST_LN_line.shp")
 
 ###############################################################################
@@ -258,11 +259,17 @@ server <- function(input, output, session) {
 	output$spawnLocMap <- renderLeaflet({
 		dat <- filteredData()
 		
-		leaflet() %>%
+		myLeaf <- leaflet() %>%
 			addProviderTiles(providers$Esri.WorldTopoMap,#OpenStreetMap.Mapnik,#Esri.WorldGrayCanvas, #
 											 options = providerTileOptions(noWrap = TRUE)
 			) %>% 
-			fitBounds(min(dat$Longitude, na.rm = TRUE), min(dat$Latitude, na.rm = TRUE), max(dat$Longitude, na.rm = TRUE), max(dat$Latitude, na.rm = TRUE)) %>% addPolygons(lng = tbrPoly$X, lat = tbrPoly$Y, color="#000000", fillOpacity = 0)# %>% addLegendCustom(colors = c(catCol, "#DD4124", "#000000"), labels = c("Indicator & priority streams", "Priority streams", "Indicator streams", "Non-indicator stream", "Known spawning location", "Central Coast region"), opacity = c(0.5, 0.5, 0.5, 0.5, 1, 0), sizes = c(rep(12, 4), 5, 5), shapes = c("circle", "circle", "circle", "circle", "circle", "square"), borders = c(catCol, "#DD4124", "#000000")) 
+			fitBounds(min(dat$Longitude, na.rm = TRUE), min(dat$Latitude, na.rm = TRUE), max(dat$Longitude, na.rm = TRUE), max(dat$Latitude, na.rm = TRUE))# %>% addPolygons(lng = tbrPoly$X, lat = tbrPoly$Y, color="#000000", fillOpacity = 0)# %>% addLegendCustom(colors = c(catCol, "#DD4124", "#000000"), labels = c("Indicator & priority streams", "Priority streams", "Indicator streams", "Non-indicator stream", "Known spawning location", "Central Coast region"), opacity = c(0.5, 0.5, 0.5, 0.5, 1, 0), sizes = c(rep(12, 4), 5, 5), shapes = c("circle", "circle", "circle", "circle", "circle", "square"), borders = c(catCol, "#DD4124", "#000000")) 
+		
+		for(i in unique(tbrPoly$SID)){
+			myLeaf <- addPolygons(myLeaf, lng = tbrPoly$X[tbrPoly$SID == i], lat = tbrPoly$Y[tbrPoly$SID == i], color="#000000", fillOpacity = 0)
+		}
+		
+		myLeaf
 	})
 	
 	
@@ -378,7 +385,7 @@ server <- function(input, output, session) {
 			axis(side = 2, at = nR - uniqueStreamIndex + 1, labels = streamNames, las =1, tck = 0, lwd = NA, line = 2.5, font = 2)
 			axis(side = 2, at = nR + 1, labels = "Stream name", las =1, tck = 0, lwd = NA, line = 2.5, font = 2, xpd = NA)
 			
-			text(1948, 1:nR, pos = 2, rev(dat$population), xpd = NA, adj = 2, cex = 0.8, col = grey(0.6))
+			text(1948, 1:nR, pos = 2, rev(dat$Species), xpd = NA, adj = 2, cex = 0.8, col = grey(0.6))
 			text(1948, nR + 1, pos = 2, "Species", xpd = NA, adj = 2, cex = 0.8, col = grey(0.6))
 			
 
