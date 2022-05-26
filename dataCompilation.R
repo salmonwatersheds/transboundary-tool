@@ -11,13 +11,15 @@ library(tools) # for toTitleCase
 #------------------------------------------------------------------------------
 nuseds <- read.csv("data/NuSEDS_20210513.csv")
 
-
+# Fix Nahlin Chinook POP_ID
+nuseds$POP_ID[which(nuseds$POP_ID == 45165)] <- 45164
 #------------------------------------------------------------------------------
 # Transboundary Streams
 #------------------------------------------------------------------------------
 # This is from Gottfried's Lookup Table: https://github.com/SOLV-Code/Transboundary_Data_Report/blob/main/DATA_PROCESSING/DATA/0_LookupFiles/TBR_PSF_CU_Site_LookupFile.csv
 
 tbr <- read.csv("data/TBR_PSF_CU_Site_LookupFile.csv")
+tbr$POP_ID[tbr$POP_ID == 45165] <- 45164
 
 # Subset NuSEDS data to only include Central Coast streams
 nuseds <- nuseds[which(nuseds$POP_ID %in% tbr$POP_ID & !is.na(nuseds$MAX_ESTIMATE)), ]
@@ -53,17 +55,14 @@ tbrDat$Species[tbrDat$Species == "SER"] <- "Sockeye"
 #------------------------------------------------------------------------------
 tbrDat$streamName <- sapply(sapply(tbr$SYSTEM_SITE[popInd], tolower), toTitleCase)
 
-# #------------------------------------------------------------------------------
-# # Match watersheds
-# !! Seems to bee a problem with the watershed lookup file. Check with Vesta. !!
-# #------------------------------------------------------------------------------
-# 
-# wshd <- read.csv("data/TBR_watershed_LookupFile.csv")
-# 
-# # wshd$streamName %in% tbrDat$streamName
-# # tbrDat$streamName %in% wshd$streamName
-# 
-# tbrDat$watershed <- wshd$watershedName[match(tbrDat$streamName, wshd$streamName)]
+#------------------------------------------------------------------------------
+# Match watersheds
+#------------------------------------------------------------------------------
+
+wshd <- read.csv("data/TBR_watershed_LookupFile.csv")
+
+tbrDat$watershed <- wshd$watershed[match(tbrDat$POP_ID, wshd$POP_ID)]
+
 #------------------------------------------------------------------------------
 # Location
 #------------------------------------------------------------------------------

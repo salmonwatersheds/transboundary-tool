@@ -250,6 +250,7 @@ server <- function(input, output, session) {
 	#----
 	# Output leaflet map
 	#----
+	
 	output$spawnLocMap <- renderLeaflet({
 		
 		dat <- filteredData()

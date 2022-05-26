@@ -1,0 +1,13 @@
+name: TransboundaryEscapement
+title: TransboundaryEscapement
+username:
+account: salmonwatersheds
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6379596
+bundleId: 5948332
+url: https://salmonwatersheds.shinyapps.io/TransboundaryEscapement/
+when: 1653587911.15395
+lastSyncTime: 1653587911.15396
+asMultiple: FALSE
+asStatic: FALSE
