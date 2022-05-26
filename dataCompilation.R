@@ -19,7 +19,6 @@ nuseds <- read.csv("data/NuSEDS_20210513.csv")
 
 tbr <- read.csv("data/TBR_PSF_CU_Site_LookupFile.csv")
 
-
 # Subset NuSEDS data to only include Central Coast streams
 nuseds <- nuseds[which(nuseds$POP_ID %in% tbr$POP_ID & !is.na(nuseds$MAX_ESTIMATE)), ]
 
@@ -39,7 +38,9 @@ for(i in 1:n){
 	popInd[i] <- which(tbr$POP_ID == tbrDat$POP_ID[i])[1]
 }
 
+#------------------------------------------------------------------------------
 # Species (n = 5)
+#------------------------------------------------------------------------------
 tbrDat$Species <- tbr$SPECIES_QUALIFIED[popInd]
 tbrDat$Species[tbrDat$Species == "PKE"] <- "Pink"
 tbrDat$Species[tbrDat$Species == "CO"] <- "Coho"
@@ -47,15 +48,33 @@ tbrDat$Species[tbrDat$Species == "CK"] <- "Chinook"
 tbrDat$Species[tbrDat$Species == "SEL"] <- "Sockeye"
 tbrDat$Species[tbrDat$Species == "SER"] <- "Sockeye"
 
+#------------------------------------------------------------------------------
 # Stream Name - make simple case
+#------------------------------------------------------------------------------
 tbrDat$streamName <- sapply(sapply(tbr$SYSTEM_SITE[popInd], tolower), toTitleCase)
 
+# #------------------------------------------------------------------------------
+# # Match watersheds
+# !! Seems to bee a problem with the watershed lookup file. Check with Vesta. !!
+# #------------------------------------------------------------------------------
+# 
+# wshd <- read.csv("data/TBR_watershed_LookupFile.csv")
+# 
+# # wshd$streamName %in% tbrDat$streamName
+# # tbrDat$streamName %in% wshd$streamName
+# 
+# tbrDat$watershed <- wshd$watershedName[match(tbrDat$streamName, wshd$streamName)]
+#------------------------------------------------------------------------------
 # Location
+#------------------------------------------------------------------------------
+
 tbrDat$Latitude <- tbr$Y_LAT[popInd]
 tbrDat$Longitude <- tbr$X_LONGT[popInd]
 
 
+#------------------------------------------------------------------------------
 # Average abundance
+#------------------------------------------------------------------------------
 tbrDat$avgSpawners <- NA
 for(i in 1:n){
 	if(tbrDat$POP_ID[i] > 0){
@@ -63,7 +82,9 @@ for(i in 1:n){
 	}
 }
 
+#------------------------------------------------------------------------------
 # Number of estimates
+#------------------------------------------------------------------------------
 tbrDat$nYears <- rep(0, n)
 for(i in 1:n){
 	if(tbrDat$POP_ID[i] > 0){
@@ -122,6 +143,7 @@ for(i in 1:n){
 		tbrDat[i , paste0("X", 1950:max(nuseds$ANALYSIS_YR))] <- nuseds.p$MAX_ESTIMATE[match(yr, nuseds.p$ANALYSIS_YR)]
 	}
 }
+
 
 ###############################################################################
 # Write csv

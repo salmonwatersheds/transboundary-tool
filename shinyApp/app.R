@@ -6,7 +6,7 @@ library(shiny)
 library(shinyBS)
 library(shinyWidgets)
 library(leaflet)
-library(PBSmapping)
+library(rgdal)
 library(sjmisc)
 library(PNWColors)
 library(tools) # for toTitleCase
@@ -43,20 +43,16 @@ abundCutExp <- c(1, 5, 20, 90, 400, 1800, 8100, "36k", "160k", "730k", "3.3mil")
 
 catCol <- c(abundCol[c(1,4,7,10)])
 
+wshdCol <- c(pnw_palette("Bay", n = 6))
 #------------------------------------------------------------------------------
 # Spatial data
-#------------------------------------------------------------------------------
-# spNames <- c("ck", "cm", "co", "pke", "pko", "sel", "ser")
-# spMatch <- c("Chinook", "Chum", "Coho", "Pink", "Pink", "Sockeye", "Sockeye")
-# spawningLines <- readRDS("data/spawningLines.rds")
-# spawningPoints <- readRDS("data/spawningPoints.rds")
-# spawningLines and spawningPoints are lists of length spNames with the spatial
-# spawning location lines (sp object) and points (eventData)
+#-----------------------------------------------------------------------------
 
 tbrPoly <- read.csv("data/tbrPolygon.csv")
 
-coastline <- importShapefile("data/coastline/250_CST_LN_line.shp")
-
+# Watersheds
+wshdPolys <- read.csv("data/wshdPolygons.csv") 
+	
 ###############################################################################
 # Define user interface
 ###############################################################################
@@ -82,6 +78,11 @@ ui <- fluidPage(
 									label = "Choose a species:",
 									choices = c("Chinook", "Chum", "Coho", "Pink", "Sockeye", "Multiple species"), 
 									selected = "Sockeye"),
+			
+			pickerInput(inputId = "Watershed",
+									label = "Choose a watershed:",
+									choices = c("All", unique(wshdPolys$watershedName)), 
+									selected = "All"),
 			
 			conditionalPanel(
 				condition = "input.Species == 'Multiple species'",
@@ -139,33 +140,23 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram ----
 server <- function(input, output, session) {
 	
-	# #-----------------
-	# Disable certain sorting criteria when species = "All species"
-	#-----------------
-	# observe({
-	# 	
-	# 	
-	# 	updatePickerInput(
-	# 		session = session, inputId = "sort2",
-	# 		choices = c("Stream name", "Number of years surveyed (most to least)", "Start of spawning (early to late)", "Distance (short to long)", "Cost (low to high)", "Effort (low to high)"),
-	# 		choicesOpt = list(
-	# 			disabled = disabled_choices,
-	# 			style = ifelse(disabled_choices,
-	# 										 yes = "color: rgba(119, 119, 119, 0.5);",
-	# 										 no = "")
-	# 		)
-	# 	)
-	# })
-	
 	#-----------------
 	# Subset area and species
 	#-----------------
+	
+	# input <- list(Species = "Pink", Watershed = "All")
+	# dat <- tbrDat[which(tbrDat$Species == input$Species & tbrDat$watershed == input$Watershed), ]
+	
 	filteredData <- reactive({
 		
-		if(input$Species == "Multiple species"){
-			tbrDat[tbrDat$Species %in% input$whichSpecies, ]
-		} else {
+		if(input$Species == "Multiple species" & input$Watershed == "All"){
+			tbrDat[which(tbrDat$Species %in% input$whichSpecies), ]
+		} else if(input$Species == "Multiple species"){
+			tbrDat[which(tbrDat$Species %in% input$whichSpecies & tbrDat$watershed == input$Watershed), ]
+		} else if(input$Watershed == "All"){
 			tbrDat[which(tbrDat$Species == input$Species), ]
+		} else {
+			tbrDat[which(tbrDat$Species == input$Species & tbrDat$watershed == input$Watershed), ]
 		}
 		
 	})
@@ -193,7 +184,7 @@ server <- function(input, output, session) {
 		uniqueStreamIndex <- match(streamNames, dat$streamName)
 		datStream <- dat[uniqueStreamIndex, ]
 		
-		datStream <- datStream[order(datStream$streamName), c("streamName", "Latitude", "Longitude")]
+		datStream <- datStream[order(datStream$streamName), c("streamName", "Latitude", "Longitude", "watershed")]
 		datStream$num <- c(1:nS)
 		
 		datStream
@@ -204,10 +195,13 @@ server <- function(input, output, session) {
 	#-----------------
 	sortedData <- reactive({
 		dat <- filteredData()
+		
+		if(nrow(dat) > 0){
 		nS <- nStreams()
 		nR <- nRows()
 		o <- order(dat$streamName)
-	  dat <- dat[o, ]
+		dat <- dat[o, ]
+	} 
 		
 		dat
 		
@@ -257,16 +251,55 @@ server <- function(input, output, session) {
 	# Output leaflet map
 	#----
 	output$spawnLocMap <- renderLeaflet({
+		
 		dat <- filteredData()
+		
+		mapBounds <- c(min(wshdPolys$X, na.rm = TRUE), min(wshdPolys$Y, na.rm = TRUE), max(wshdPolys$X, na.rm = TRUE), max(wshdPolys$Y, na.rm = TRUE))
 		
 		myLeaf <- leaflet() %>%
 			addProviderTiles(providers$Esri.WorldTopoMap,#OpenStreetMap.Mapnik,#Esri.WorldGrayCanvas, #
 											 options = providerTileOptions(noWrap = TRUE)
 			) %>% 
-			fitBounds(min(dat$Longitude, na.rm = TRUE), min(dat$Latitude, na.rm = TRUE), max(dat$Longitude, na.rm = TRUE), max(dat$Latitude, na.rm = TRUE))# %>% addPolygons(lng = tbrPoly$X, lat = tbrPoly$Y, color="#000000", fillOpacity = 0)# %>% addLegendCustom(colors = c(catCol, "#DD4124", "#000000"), labels = c("Indicator & priority streams", "Priority streams", "Indicator streams", "Non-indicator stream", "Known spawning location", "Central Coast region"), opacity = c(0.5, 0.5, 0.5, 0.5, 1, 0), sizes = c(rep(12, 4), 5, 5), shapes = c("circle", "circle", "circle", "circle", "circle", "square"), borders = c(catCol, "#DD4124", "#000000")) 
+			fitBounds(mapBounds[1], mapBounds[2], mapBounds[3], mapBounds[4])
 		
-		for(i in unique(tbrPoly$SID)){
-			myLeaf <- addPolygons(myLeaf, lng = tbrPoly$X[tbrPoly$SID == i], lat = tbrPoly$Y[tbrPoly$SID == i], color="#000000", fillOpacity = 0)
+		# for(i in unique(tbrPoly$SID)){
+		# 	myLeaf <- addPolygons(myLeaf, lng = tbrPoly$X[tbrPoly$SID == i], lat = tbrPoly$Y[tbrPoly$SID == i], color="#000000", fillOpacity = 0, weight = 2, opacity = 0.9)
+		# }
+		
+		for(i in 1:6){ # For each watershed
+			for(j in unique(wshdPolys$SID[wshdPolys$PID == i])){ # For each polygon in that watershed
+				
+				# Add polygon with watershedName label if it's polygon #1
+				# Except for Taku, which the second polygon is the main one!
+				if((i != 4 & j == 1) | (i == 4 & j == 2)){
+					myLeaf <- addPolygons(
+					myLeaf, 
+					lng = wshdPolys$X[wshdPolys$PID == i & wshdPolys$SID == j], 
+					lat = wshdPolys$Y[wshdPolys$PID == i & wshdPolys$SID == j], 
+					color = wshdCol[i], 
+					fillOpacity = 0.4, 
+					weight = 1, 
+					opacity = 0.9, 
+					fillColor = wshdCol[i], 
+					label = unique(wshdPolys$watershedName[wshdPolys$PID == i & wshdPolys$SID == j]),
+					labelOptions = labelOptions(
+						noHide = TRUE, 
+						direction = "center", 
+						textOnly = TRUE, 
+						style = list("font-style" = "bold",
+												 "font-size" = "14px")))
+				} else { # Add extra polygons for watershed i without a label
+					myLeaf <- addPolygons(
+						myLeaf, 
+						lng = wshdPolys$X[wshdPolys$PID == i & wshdPolys$SID == j], 
+						lat = wshdPolys$Y[wshdPolys$PID == i & wshdPolys$SID == j], 
+						color = wshdCol[i], 
+						fillOpacity = 0.4, 
+						weight = 1, 
+						opacity = 0.9, 
+						fillColor = wshdCol[i])
+				}
+			}
 		}
 		
 		myLeaf
@@ -277,42 +310,25 @@ server <- function(input, output, session) {
 	# Add circle markers depending on order according to sort2
 	#----
 	observe({
-		# dat0 <- filteredData()
-		# nS <- nStreams()
-		# nR <- nRows()
-		# 
-		# streamNames <- unique(dat0$streamName)
-		# uniqueStreamIndex <- match(streamNames, dat0$streamName)
-		# datStream <- dat0[uniqueStreamIndex, ]
-
+		dat <- filteredData()
+		
+		if(nrow(dat) == 0){
+			
+			# boundsLL <- c(min(tbrDat$Longitude, na.rm = TRUE), min(tbrDat$Latitude, na.rm = TRUE), max(tbrDat$Longitude, na.rm = TRUE), max(tbrDat$Latitude, na.rm = TRUE))
+			
+			myLeaf <- leafletProxy("spawnLocMap") %>%
+				# fitBounds(boundsLL[1], boundsLL[2], boundsLL[3], boundsLL[4]) %>%
+				clearMarkers() 
+			
+		} else {
+			
 		datStream <- streamData()	
 		
-		# if(input$Species == "Multiple species"){
-		# 	s <- which(spMatch %in% input$whichSpecies)
-		# } else {
-		# 	s <- which(spMatch == input$Species)
-		# }
-		
-		boundsLL <- c(min(datStream$Longitude, na.rm = TRUE), min(datStream$Latitude, na.rm = TRUE), max(datStream$Longitude, na.rm = TRUE), max(datStream$Latitude, na.rm = TRUE))
+		# boundsLL <- c(min(datStream$Longitude, na.rm = TRUE), min(datStream$Latitude, na.rm = TRUE), max(datStream$Longitude, na.rm = TRUE), max(datStream$Latitude, na.rm = TRUE))
 
 		myLeaf <- leafletProxy("spawnLocMap") %>%
-			fitBounds(boundsLL[1], boundsLL[2], boundsLL[3], boundsLL[4]) %>%
+			# fitBounds(boundsLL[1], boundsLL[2], boundsLL[3], boundsLL[4]) %>%
 			clearMarkers() 
-		
-		# for(i in s){
-		# 	myLeaf <- addPolylines(myLeaf, data = spawningLines[[i]], 
-		# 											 color = "#DD4124",
-		# 											 opacity = 1,
-		# 											 weight = 2) 
-		# 	myLeaf <- addCircles(myLeaf, 
-		# 										 lng = spawningPoints[[i]]$X,
-		# 										 lat = spawningPoints[[i]]$Y,
-		# 										 stroke = FALSE,
-		# 										 fill = TRUE,
-		# 										 fillColor = "#DD4124",
-		# 										 fillOpacity = 1,
-		# 										 radius = 100)
-		# }
 		
 		myLeaf <- addCircleMarkers(myLeaf, 
 															 lat = datStream$Latitude[!is.na(datStream$Latitude)],
@@ -325,17 +341,17 @@ server <- function(input, output, session) {
 															 	textOnly = TRUE, 
 															 	style = list("font-style" = "bold",
 															 							 "font-size" = "10px")),#"color" = "white",
-															 color = "#DD4124", #catCol[datStream$category[!is.na(datStream$Latitude)]],
+															 color = wshdCol[match(datStream$watershed[!is.na(datStream$Latitude)], unique(wshdPolys$watershedName))],
 															 fillOpacity = 0.5,
 															 opacity = 1,
 															 radius = 8, #ifelse(dat$category[!is.na(dat$Latitude)] == 4, 6, 8),
 															 stroke = TRUE,
 															 weight = 1,
-															 fillColor = "#DD4124"#catCol[datStream$category[!is.na(datStream$Latitude)]]
+															 fillColor = wshdCol[match(datStream$watershed[!is.na(datStream$Latitude)], unique(wshdPolys$watershedName))]
 		)
 		
 		myLeaf
-		
+		}
 	})
 	
 	
@@ -349,6 +365,8 @@ server <- function(input, output, session) {
 			#---------------
 			# Sorted data
 			dat <- sortedData()
+			
+			if(nrow(dat) > 0){
 			nS <- nStreams()
 			nR <- nRows()
 			
@@ -363,7 +381,7 @@ server <- function(input, output, session) {
 			
 			#---------------
 			# Plotting
-			layout(mat = matrix(c(1,1,1,2), nrow = 1))
+			# layout(mat = matrix(c(1,1,1,2), nrow = 1))
 			par(mar = c(10,20,4,2), cex = 1, cex.lab = 1)
 			
 			plot(c(min(yrs), max(yrs)), c(0.5, nR + 0.5), "n", yaxt = "n", xlab = "", ylab = "", yaxs= "i", bty = "n")
@@ -396,7 +414,10 @@ server <- function(input, output, session) {
 			cexText <- 0.9
 			points(rep(xNum, nS), 
 						 (nR - datStream$match + 1), 
-						pch = 21, bg = paste0("#DD4124", 60), col = "#DD4124", xpd = NA, cex = cexNum)
+						pch = 21, 
+						bg = paste0(wshdCol[match(datStream$watershed, unique(wshdPolys$watershedName))], 60), 
+						col = wshdCol[match(datStream$watershed, unique(wshdPolys$watershedName))], 
+						xpd = NA, cex = cexNum)
 					
 					text(rep(xNum, nS), 
 							 (nR - datStream$match + 1), 
@@ -422,8 +443,16 @@ server <- function(input, output, session) {
 			text(1948, u[3] - posL[1] + 0.2, xpd = NA, "Log spawner abundance", pos = 2)
 			text(1948, u[3] - posL[2] - 0.2, xpd = NA, "Spawner abundance", pos = 2)
 			
-		}, 
-		width = 1200, height = nRows() * 22 + 90)
+		} else {
+			layout(mat = matrix(c(1,1,1,2), nrow = 1))
+			par(mar = c(4,4,2,1), cex = 1, cex.lab = 1)
+			
+			plot(1, 1, "n", ylab = "", xlab = "", bty = "n", xaxt = "n", yaxt = "n")
+			text(1, 1, "No data to plot")
+		} }, 
+		width = 1200, height = max(10, nRows()) * 22 + 90)
+		
+		
 		
 	}) # end observe
 
