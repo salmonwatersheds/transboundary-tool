@@ -6,7 +6,6 @@ library(shiny)
 library(shinyBS)
 library(shinyWidgets)
 library(leaflet)
-library(rgdal)
 library(sjmisc)
 library(PNWColors)
 library(tools) # for toTitleCase
@@ -48,9 +47,7 @@ wshdCol <- c(pnw_palette("Bay", n = 6))
 # Spatial data
 #-----------------------------------------------------------------------------
 
-tbrPoly <- read.csv("data/tbrPolygon.csv")
-
-# Watersheds
+# tbrPoly <- read.csv("data/tbrPolygon.csv") # Only show watersheds for now
 wshdPolys <- read.csv("data/wshdPolygons.csv") 
 	
 ###############################################################################
@@ -79,10 +76,10 @@ ui <- fluidPage(
 									choices = c("Chinook", "Chum", "Coho", "Pink", "Sockeye", "Multiple species"), 
 									selected = "Sockeye"),
 			
-			pickerInput(inputId = "Watershed",
-									label = "Choose a watershed:",
-									choices = c("All", unique(wshdPolys$watershedName)), 
-									selected = "All"),
+			checkboxGroupInput(inputId = "Watershed",
+												 label = "Choose watershed(s):",
+												 choices = unique(wshdPolys$watershedName),
+												 selected = unique(wshdPolys$watershedName)),
 			
 			conditionalPanel(
 				condition = "input.Species == 'Multiple species'",
@@ -144,19 +141,15 @@ server <- function(input, output, session) {
 	# Subset area and species
 	#-----------------
 	
-	# input <- list(Species = "Pink", Watershed = "All")
-	# dat <- tbrDat[which(tbrDat$Species == input$Species & tbrDat$watershed == input$Watershed), ]
+	# input <- list(Species = "Sockeye", Watershed = unique(wshdPolys$watershedName))
+	# dat <- tbrDat[which(tbrDat$Species == input$Species & tbrDat$watershed %in% input$Watershed), ]
 	
 	filteredData <- reactive({
 		
-		if(input$Species == "Multiple species" & input$Watershed == "All"){
-			tbrDat[which(tbrDat$Species %in% input$whichSpecies), ]
-		} else if(input$Species == "Multiple species"){
-			tbrDat[which(tbrDat$Species %in% input$whichSpecies & tbrDat$watershed == input$Watershed), ]
-		} else if(input$Watershed == "All"){
-			tbrDat[which(tbrDat$Species == input$Species), ]
-		} else {
-			tbrDat[which(tbrDat$Species == input$Species & tbrDat$watershed == input$Watershed), ]
+		if(input$Species == "Multiple species"){
+			tbrDat[which(tbrDat$Species %in% input$whichSpecies & tbrDat$watershed %in% input$Watershed), ]
+	} else {
+			tbrDat[which(tbrDat$Species == input$Species & tbrDat$watershed %in% input$Watershed), ]
 		}
 		
 	})
@@ -175,7 +168,7 @@ server <- function(input, output, session) {
 	
 	# Stream numbers for mapping and display
 	streamData <- reactive({
-		dat <- filteredData()
+		dat <- sortedData()
 		nS <- nStreams()
 		nR <- nRows()
 		
@@ -184,7 +177,7 @@ server <- function(input, output, session) {
 		uniqueStreamIndex <- match(streamNames, dat$streamName)
 		datStream <- dat[uniqueStreamIndex, ]
 		
-		datStream <- datStream[order(datStream$streamName), c("streamName", "Latitude", "Longitude", "watershed")]
+		datStream <- datStream[, c("streamName", "Latitude", "Longitude", "watershed")]
 		datStream$num <- c(1:nS)
 		
 		datStream
@@ -199,7 +192,7 @@ server <- function(input, output, session) {
 		if(nrow(dat) > 0){
 		nS <- nStreams()
 		nR <- nRows()
-		o <- order(dat$streamName)
+		o <- order(dat$watershed, dat$streamName)
 		dat <- dat[o, ]
 	} 
 		
