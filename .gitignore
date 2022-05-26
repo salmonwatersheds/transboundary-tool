@@ -37,6 +37,8 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+.DS_Store
+.RDataTmp
 
 # Data variables
 data/
