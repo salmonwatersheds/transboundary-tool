@@ -409,7 +409,7 @@ server <- function(input, output, session) {
 
 
 			# Number each stream according to category
-			xNum <- 1912
+			xNum <- 1928
 			cexNum <- 2.7
 			cexText <- 0.9
 			points(rep(xNum, nS), 
@@ -450,7 +450,7 @@ server <- function(input, output, session) {
 			plot(1, 1, "n", ylab = "", xlab = "", bty = "n", xaxt = "n", yaxt = "n")
 			text(1, 1, "No data to plot")
 		} }, 
-		width = 1200, height = max(10, nRows()) * 22 + 90)
+		width = 1200, height = max(8, nRows()) * 22 + 90)
 		
 		
 		
