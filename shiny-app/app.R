@@ -18,11 +18,8 @@ library(rmarkdown)
 library(maptools)
 library(webshot)
 
-webshot::install_phantomjs()
+# webshot::install_phantomjs()
 
-
-
-# gpclibPermit()
 ###############################################################################
 # Load data
 ###############################################################################
@@ -422,7 +419,7 @@ server <- function(input, output, session) {
 			
 			
 			# Legend
-			posL <- c(4, 5)
+			posL <- c(3.5, 4.5)
 			for(i in 1:length(abundCol)){
 				polygon(x = 1949.5 + c(i-1, i, i, i-1)*(2019-1950)/length(abundCol), y = u[3] - posL[c(1, 1, 2, 2)], col = abundCol[i], border= NA, xpd = NA)
 			}
@@ -444,7 +441,7 @@ server <- function(input, output, session) {
 			plot(1, 1, "n", ylab = "", xlab = "", bty = "n", xaxt = "n", yaxt = "n")
 			text(1, 1, "No data to plot")
 		} }, 
-		width = 1200, height = max(8, nRows()) * 22 + 90)
+		width = 1200, height = max(5, nRows()) * 28 + 90)
 		
 		
 		
