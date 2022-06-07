@@ -112,10 +112,9 @@ ui <- fluidPage(
 	tabsetPanel(type = "tabs",
 							selected = "Escapement Data",
 							tabPanel("Escapement Data", 
-											 HTML("<h3>Escapement data for 1950 - 2019</h3>
-											 		 <p style='color:grey'>*<small>indicates a history of enhancement (see 'Data Sources').</small></p>"),
+											 HTML("<h3>Escapement data for 1950 - 2019</h3>"),
 											 plotOutput(outputId = "monPlot", inline = TRUE),
-											 HTML("<p>The main figure shows historical escapement monitoring data from the <a href='https://open.canada.ca/data/en/dataset/c48669a3-045b-400d-b730-48aafe8c5ee6'>New Salmon Escapement Database System</a> (NuSEDS) for the period 1950 - 2020, with the points coloured according to the abundance of spawners (red/orange = low abundance, amber = medium abundance, green/blue = high abundance; see scale bar). Each row is a unique spawning population within the database. There may be more than one population within a stream if, for example, runs with early and late timing are differentiated or if multiple species are selected above. The numbered circles correspond to the stream locations on the map above (ordered alphabetically within indicator/priority categories). An asterisk (*) after the species indicates that there is a history of enhancement of that population (e.g., hatchery supplementation; see the ‘Data Sources’ for more information).</p>
+											 HTML("<p>The main figure shows historical escapement monitoring data from the <a href='https://open.canada.ca/data/en/dataset/c48669a3-045b-400d-b730-48aafe8c5ee6'>New Salmon Escapement Database System</a> (NuSEDS) for the period 1950 - 2020, with the points coloured according to the abundance of spawners (red/orange = low abundance, amber = medium abundance, green/blue = high abundance; see scale bar). Each row is a unique spawning population within the database. There may be more than one population within a stream if, for example, runs with early and late timing are differentiated or if multiple species are selected above. The numbered circles correspond to the stream locations on the map above (ordered alphabetically within indicator/priority categories).</p>
  <p>The values of the sorting criteria, if applicable, are shown on the right-hand side of the figure. For details of how these values were calculated, see the ‘Data Sources’ tab.</p><br><br><br><br><br>")),
 						
 							tabPanel("Data Sources", 
