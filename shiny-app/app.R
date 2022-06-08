@@ -86,7 +86,7 @@ ui <- fluidPage(
 													 selected = c("Pink", "Coho"))
 			),
 			
-			bsTooltip("whichSpecies", "Check multiple species to comapre escapement and spawn timing.",
+			bsTooltip("whichSpecies", "Check multiple species to compare escapement.",
 								"right", options = list(container = "body")),
 			
 		
@@ -114,12 +114,12 @@ ui <- fluidPage(
 							tabPanel("Escapement Data", 
 											 HTML("<h3>Escapement data for 1950 - 2019</h3>"),
 											 plotOutput(outputId = "monPlot", inline = TRUE),
-											 HTML("<p>The main figure shows historical escapement monitoring data from the <a href='https://open.canada.ca/data/en/dataset/c48669a3-045b-400d-b730-48aafe8c5ee6'>New Salmon Escapement Database System</a> (NuSEDS) for the period 1950 - 2020, with the points coloured according to the abundance of spawners (red/orange = low abundance, amber = medium abundance, green/blue = high abundance; see scale bar). Each row is a unique spawning population within the database. There may be more than one population within a stream if, for example, runs with early and late timing are differentiated or if multiple species are selected above. The numbered circles correspond to the stream locations on the map above (ordered alphabetically within indicator/priority categories).</p>
+											 HTML("<p>The main figure shows historical escapement monitoring data from the <a href='https://open.canada.ca/data/en/dataset/c48669a3-045b-400d-b730-48aafe8c5ee6'>New Salmon Escapement Database System</a> (NuSEDS) for the period 1950 - 2020, with the points coloured according to the abundance of spawners (red/orange = low abundance, amber = medium abundance, green/blue = high abundance; see scale bar). Each row is a unique spawning population within the database. There may be more than one population within a stream if, for example, runs with early and late timing are differentiated or if multiple species are selected above. The numbered circles correspond to the stream locations on the map above (ordered alphabetically within indicator/priority categories if applicable).</p>
  <p>The values of the sorting criteria, if applicable, are shown on the right-hand side of the figure. For details of how these values were calculated, see the ‘Data Sources’ tab.</p><br><br><br><br><br>")),
 						
 							tabPanel("Data Sources", 
 											 HTML("<h4>Escapement and spawn timing</h4>
-											 		 <p>The escapement estimates and spawn timing data are publicly available from Fisheries and Oceans Canada as part of the <a href='https://open.canada.ca/data/en/dataset/c48669a3-045b-400d-b730-48aafe8c5ee6'>New Salmon Escapement Database System</a> (NuSEDS). The escapement data displayed here are the MAX_ESTIMATE field from NuSEDS, and were downloaded May 2021 and include data up to 2020. Although there may be additional sources of data on escapement, including from First Nations and academic researchers, those data were not publicly accessible for incorporation into this Tool. Compiling escapement information from multiple sources for display may be a useful future extension of the Tool.</p>"))
+											 		 <p>The escapement estimates are publicly available from Fisheries and Oceans Canada as part of the <a href='https://open.canada.ca/data/en/dataset/c48669a3-045b-400d-b730-48aafe8c5ee6'>New Salmon Escapement Database System</a> (NuSEDS). The escapement data displayed here are the MAX_ESTIMATE field from NuSEDS, and were downloaded May 2021 and include data up to 2020. Although there may be additional sources of data on escapement, including from First Nations and academic researchers, those data were not publicly accessible for incorporation into this Tool. Compiling escapement information from multiple sources for display may be a useful future extension of the Tool.</p>"))
 	) # end tabSetPanel
 	
 ) # end fluidpage
