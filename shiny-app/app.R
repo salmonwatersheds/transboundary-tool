@@ -47,6 +47,7 @@ wshdCol <- c(pnw_palette("Bay", n = 6))
 # tbrPoly <- read.csv("data/tbrPolygon.csv") # Only show watersheds for now
 wshdPolys <- read.csv("data/wshdPolygons.csv") 
 	
+
 ###############################################################################
 # Define user interface
 ###############################################################################
@@ -246,15 +247,7 @@ server <- function(input, output, session) {
 		
 		mapBounds <- c(min(wshdPolys$X, na.rm = TRUE), min(wshdPolys$Y, na.rm = TRUE), max(wshdPolys$X, na.rm = TRUE), max(wshdPolys$Y, na.rm = TRUE))
 		
-		myLeaf <- leaflet() %>%
-			addProviderTiles(providers$Esri.WorldTopoMap,#OpenStreetMap.Mapnik,#Esri.WorldGrayCanvas, #
-											 options = providerTileOptions(noWrap = TRUE)
-			) %>% 
-			fitBounds(mapBounds[1], mapBounds[2], mapBounds[3], mapBounds[4])
-		
-		# for(i in unique(tbrPoly$SID)){
-		# 	myLeaf <- addPolygons(myLeaf, lng = tbrPoly$X[tbrPoly$SID == i], lat = tbrPoly$Y[tbrPoly$SID == i], color="#000000", fillOpacity = 0, weight = 2, opacity = 0.9)
-		# }
+		myLeaf <- leaflet() %>% addProviderTiles(providers$Esri.WorldTopoMap, options = providerTileOptions(noWrap = TRUE)) %>% fitBounds(mapBounds[1], mapBounds[2], mapBounds[3], mapBounds[4])
 		
 		for(i in 1:6){ # For each watershed
 			for(j in unique(wshdPolys$SID[wshdPolys$PID == i])){ # For each polygon in that watershed
@@ -267,7 +260,7 @@ server <- function(input, output, session) {
 					lng = wshdPolys$X[wshdPolys$PID == i & wshdPolys$SID == j], 
 					lat = wshdPolys$Y[wshdPolys$PID == i & wshdPolys$SID == j], 
 					color = wshdCol[i], 
-					fillOpacity = 0.4, 
+					fillOpacity = 0.1, 
 					weight = 1, 
 					opacity = 0.9, 
 					fillColor = wshdCol[i], 
@@ -284,7 +277,7 @@ server <- function(input, output, session) {
 						lng = wshdPolys$X[wshdPolys$PID == i & wshdPolys$SID == j], 
 						lat = wshdPolys$Y[wshdPolys$PID == i & wshdPolys$SID == j], 
 						color = wshdCol[i], 
-						fillOpacity = 0.4, 
+						fillOpacity = 0.1, 
 						weight = 1, 
 						opacity = 0.9, 
 						fillColor = wshdCol[i])
@@ -293,6 +286,7 @@ server <- function(input, output, session) {
 		}
 		
 		myLeaf
+		
 	})
 	
 	
