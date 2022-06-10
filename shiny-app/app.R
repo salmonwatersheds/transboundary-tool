@@ -349,7 +349,7 @@ server <- function(input, output, session) {
 					}
 			}
 			
-			myLeaf <- leafletProxy("spawnLocMap") %>% clearGroup(group = "CU") %>% addPolygons(data = CU.add, color = "#444444", weight = 1, smoothFactor = 0.5, opacity = 0.8, fillOpacity = 0, highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), popup = CU_CK$CU_NAME, group = "CU")
+			myLeaf <- leafletProxy("spawnLocMap") %>% clearGroup(group = "CU") %>% addPolygons(data = CU.add, color = "#444444", weight = 1.5, smoothFactor = 0.5, opacity = 0.8, fillOpacity = 0, highlightOptions = highlightOptions(color = "white", weight = 2.5, bringToFront = TRUE), popup = CU.add$CU_NAME, group = "CU")
 			myLeaf
 			
 		} # end Multiple species
